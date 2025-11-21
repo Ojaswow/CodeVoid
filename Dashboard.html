@@ -202,29 +202,29 @@
             <div class="stat-card">
                 <div class="stat-icon">👥</div>
                 <div class="stat-title">Total Users</div>
-                <div class="stat-value">24,563</div>
-                <div class="stat-change">↑ 12.5% from last month</div>
+                <div class="stat-value" id="totalUsers">90,000</div>
+                <div class="stat-change" id="usersChange">↑ 12.5% from last month</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-icon">💰</div>
                 <div class="stat-title">Site Valuation</div>
-                <div class="stat-value">$99,240</div>
-                <div class="stat-change">↑ 8.3% from last month</div>
+                <div class="stat-value" id="valuation">$99,240</div>
+                <div class="stat-change" id="valuationChange">↑ 8.3% from last month</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-icon">⚡</div>
                 <div class="stat-title">API Requests</div>
-                <div class="stat-value">1.2M</div>
-                <div class="stat-change">↑ 23.1% from last month</div>
+                <div class="stat-value" id="apiRequests">2.0M</div>
+                <div class="stat-change" id="apiChange">↑ 23.1% from last month</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-icon">⏱️</div>
                 <div class="stat-title">Avg Response Time</div>
-                <div class="stat-value">142ms</div>
-                <div class="stat-change negative">↓ 4.2% from last month</div>
+                <div class="stat-value" id="responseTime">142ms</div>
+                <div class="stat-change" id="responseChange">↓ 4.2% from last month</div>
             </div>
         </div>
 
@@ -258,5 +258,100 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Initialize values
+        let currentUsers = 90000;
+        let currentValuation = 99240;
+        let currentApiRequests = 2.0; // in millions
+        let currentResponseTime = 142;
+
+        // Store previous values for calculating changes
+        let prevUsers = currentUsers;
+        let prevValuation = currentValuation;
+        let prevApiRequests = currentApiRequests;
+        let prevResponseTime = currentResponseTime;
+
+        // Update counter for big valuation change
+        let updateCounter = 0;
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            return num.toLocaleString();
+        }
+
+        function calculateChange(current, previous) {
+            const change = ((current - previous) / previous * 100).toFixed(1);
+            return parseFloat(change);
+        }
+
+        function updateStats() {
+            // Increment update counter
+            updateCounter++;
+
+            // Update previous values
+            prevUsers = currentUsers;
+            prevValuation = currentValuation;
+            prevApiRequests = currentApiRequests;
+            prevResponseTime = currentResponseTime;
+
+            // Update Users (10k-15k per update, realistic increase)
+            const userIncrease = Math.floor(Math.random() * 5000) + 10000; // 10k to 15k
+            currentUsers += userIncrease;
+
+            // Update Valuation (6k-9k normally, 40k every 5 updates, max 600k)
+            let valuationIncrease;
+            if (updateCounter % 5 === 0) {
+                valuationIncrease = 40000; // Big change every 5 updates
+            } else {
+                valuationIncrease = Math.floor(Math.random() * 3000) + 6000; // 6k to 9k
+            }
+            
+            currentValuation = Math.min(600000, currentValuation + valuationIncrease);
+
+            // Update API Requests (no limit, increases faster from 2M to 100M+)
+            const apiIncrease = (Math.random() * 2.5) + 1.5; // 1.5M to 4M increase per update
+            currentApiRequests += apiIncrease;
+
+            // Update Response Time (can go up or down)
+            const timeChange = Math.floor(Math.random() * 20) + 5;
+            currentResponseTime += (Math.random() > 0.5 ? timeChange : -timeChange);
+            currentResponseTime = Math.max(50, Math.min(500, currentResponseTime));
+
+            // Update DOM
+            document.getElementById('totalUsers').textContent = formatNumber(currentUsers);
+            document.getElementById('valuation').textContent = '$' + formatNumber(currentValuation);
+            document.getElementById('apiRequests').textContent = currentApiRequests.toFixed(1) + 'M';
+            document.getElementById('responseTime').textContent = currentResponseTime + 'ms';
+
+            // Update change percentages
+            const usersChangePercent = calculateChange(currentUsers, prevUsers);
+            const valuationChangePercent = calculateChange(currentValuation, prevValuation);
+            const apiChangePercent = calculateChange(currentApiRequests, prevApiRequests);
+            const responseChangePercent = calculateChange(currentResponseTime, prevResponseTime);
+
+            // Update change displays
+            const usersChangeEl = document.getElementById('usersChange');
+            usersChangeEl.textContent = `${usersChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(usersChangePercent)}% from last update`;
+            usersChangeEl.className = usersChangePercent >= 0 ? 'stat-change' : 'stat-change negative';
+
+            const valuationChangeEl = document.getElementById('valuationChange');
+            valuationChangeEl.textContent = `↑ ${valuationChangePercent}% from last update`;
+            valuationChangeEl.className = 'stat-change';
+
+            const apiChangeEl = document.getElementById('apiChange');
+            apiChangeEl.textContent = `${apiChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(apiChangePercent)}% from last update`;
+            apiChangeEl.className = apiChangePercent >= 0 ? 'stat-change' : 'stat-change negative';
+
+            const responseChangeEl = document.getElementById('responseChange');
+            responseChangeEl.textContent = `${responseChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(responseChangePercent)}% from last update`;
+            responseChangeEl.className = responseChangePercent >= 0 ? 'stat-change negative' : 'stat-change';
+        }
+
+        // Update stats every 30 seconds
+        setInterval(updateStats, 5000);
+    </script>
 </body>
 </html>

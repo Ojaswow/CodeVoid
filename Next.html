@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Root Access — Ojas Core (Aurora Agency)</title>
+  <meta name="description" content="Demo: Aurora hacker/agency admin console (visual only)" />
+  <style>
+    :root{
+      --bg-1: #03030a;
+      --bg-2: #06021a;
+      --aurora-a: #6f00ff;
+      --aurora-b: #00b3ff;
+      --accent: #9effd6;
+      --muted: rgba(255,255,255,0.07);
+      --card: rgba(255,255,255,0.03);
+      --danger: #ff8a8a;
+      --glass-radius: 12px;
+      --mono: ui-monospace, "Roboto Mono", Menlo, monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:var(--mono);background:
+      radial-gradient(900px 360px at 12% 12%, rgba(111,0,255,0.06), transparent 6%),
+      linear-gradient(180deg,var(--bg-1) 0%, var(--bg-2) 65%);
+      color:#dfffe9; -webkit-font-smoothing:antialiased; font-size:14px;}
+
+    /* container */
+    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .console{
+      width:1150px; max-width:96%;
+      display:grid;
+      grid-template-columns: 520px 1fr;
+      gap:0;
+      border-radius:14px; overflow:hidden;
+      background: linear-gradient(180deg, rgba(6,6,10,0.6), rgba(8,4,20,0.38));
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 40px 140px rgba(0,0,0,0.72);
+      transform: translateZ(0);
+    }
+
+    /* AURORA BACKDROP (animated) */
+    .aurora {
+      position:absolute; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(800px 220px at 10% 20%, rgba(111,0,255,0.06), transparent 8%),
+        radial-gradient(700px 200px at 80% 80%, rgba(0,179,255,0.04), transparent 8%);
+      mix-blend-mode: screen; opacity:0.9;
+      filter: blur(30px) saturate(1.15);
+      animation: auroraMove 9s linear infinite;
+    }
+    @keyframes auroraMove {
+      0%{ transform: translateX(-6%) translateY(0) }
+      50%{ transform: translateX(6%) translateY(-2%) }
+      100%{ transform: translateX(-6%) translateY(0) }
+    }
+
+    /* LEFT - terminal */
+    .left{ padding:18px; position:relative; z-index:1; background:linear-gradient(90deg, rgba(2,2,4,0.4), rgba(8,2,20,0.26)); border-right:1px solid rgba(255,255,255,0.02) }
+    .title{ font-size:12px; color:var(--muted); letter-spacing:2px; display:flex; align-items:center; gap:12px; margin-bottom:10px}
+    .glitch{ font-weight:800; font-size:13px; background: linear-gradient(90deg,var(--aurora-b),var(--aurora-a)); -webkit-background-clip:text; color:transparent; position:relative;}
+    .terminal{ background: linear-gradient(180deg, rgba(2,2,3,0.34), rgba(2,2,3,0.06)); padding:12px; border-radius:10px; height:450px; overflow:hidden; border:1px solid rgba(0,255,176,0.02) }
+    .terminal::before{ content:""; position:absolute; inset:0; background-image: linear-gradient(rgba(255,255,255,0.006) 1px, transparent 1px); background-size:100% 3px; mix-blend-mode:overlay; pointer-events:none; opacity:0.6 }
+    .boot-lines{ font-size:13px; line-height:1.45; color:#bfffe0; white-space:pre-wrap; height:360px; overflow:auto; padding-right:8px; }
+    .boot-progress{ height:8px; width:100%; border-radius:6px; background: rgba(255,255,255,0.03); margin-top:10px; overflow:hidden; }
+    .boot-progress > i{ display:block; height:100%; width:0%; background: linear-gradient(90deg,var(--aurora-b), var(--aurora-a)); box-shadow:0 0 28px rgba(111,0,255,0.06); transition: width 380ms linear; }
+
+    /* RIGHT - dashboard */
+    .right{ padding:18px; position:relative; z-index:1; display:flex; flex-direction:column; gap:12px; justify-content:flex-start; }
+    .top-row{ display:flex; justify-content:space-between; align-items:center; gap:10px }
+    .avatar{ width:78px; height:78px; border-radius:12px; background:linear-gradient(180deg,#05040a,#0b0020); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.04); box-shadow:0 10px 40px rgba(111,0,255,0.06); overflow:visible; }
+    .name-wrap{ display:flex; flex-direction:column; gap:2px }
+    .label-small{ font-size:12px; color:var(--muted); letter-spacing:1px; }
+    .name{ font-size:20px; font-weight:800; background: linear-gradient(90deg,var(--aurora-b),var(--aurora-a)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px; }
+
+    .panel{ background: linear-gradient(180deg, rgba(3,3,4,0.56), rgba(5,5,6,0.36)); border-radius:12px; padding:12px; display:flex; gap:12px; align-items:center; }
+    .stat{ flex:1; min-width:0; }
+    .stat .label{ font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .stat .value{ font-size:18px; font-weight:700; color:#e8fff5; }
+
+    .meter{ height:10px; width:100%; background: rgba(255,255,255,0.03); border-radius:999px; overflow:hidden; margin-top:8px; }
+    .meter > i{ display:block; height:100%; width:10%; background: linear-gradient(90deg,var(--aurora-b),var(--aurora-a)); transition: width 700ms cubic-bezier(.22,.9,.3,1); box-shadow:0 6px 18px rgba(111,0,255,0.06); }
+
+    .action-row{ display:flex; gap:10px; align-items:center; margin-top:6px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background: linear-gradient(90deg, rgba(111,0,255,0.06), rgba(0,179,255,0.03)); cursor:pointer; color:#e8fff5; font-weight:700; letter-spacing:0.4px; }
+    .btn.secondary{ background:transparent; color:var(--aurora-b); border:1px solid rgba(0,179,255,0.06); }
+
+    .services{ display:flex; gap:8px; flex-wrap:wrap; }
+    .svc { padding:6px 8px; border-radius:8px; font-size:12px; border:1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.02); display:flex; gap:8px; align-items:center; }
+
+    .threat{ display:flex; align-items:center; gap:8px }
+    .threat .bar{ width:120px; height:10px; border-radius:999px; background:rgba(255,255,255,0.03); overflow:hidden; }
+    .threat .bar>i{ height:100%; display:block; width:6%; background:linear-gradient(90deg,#aaffff,#d1a0ff); box-shadow:0 6px 18px rgba(111,0,255,0.06); transition: width 380ms }
+
+    .token{ margin-left:auto; padding:8px 10px; border-radius:10px; background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.03); display:flex; gap:8px; align-items:center }
+    .token .val{ font-weight:800; letter-spacing:1px }
+    .token .val.blurred{ filter: blur(6px); transition: filter .35s }
+    .token .val.blurred.show{ filter: blur(0) }
+
+    canvas.spark{ width:100%; height:40px; display:block; border-radius:8px; background: linear-gradient(90deg, rgba(255,255,255,0.01), transparent); }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; transform:none !important; }
+      .aurora { animation: none !important; filter: none !important; opacity:0.8 }
+    }
+
+    @media (max-width:960px){
+      .console{ grid-template-columns: 1fr; }
+      .left{ order:1 } .right{ order:2 }
+      .avatar{ width:64px; height:64px }
+    }
+  </style>
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"></div>
+
+  <div class="stage">
+    <div class="console" role="region" aria-label="admin-console">
+      <!-- LEFT: Terminal -->
+      <div class="left">
+        <div class="title">
+          <span class="glitch" data-text="SYSTEM BOOT · SECURE SHELL">SYSTEM BOOT · SECURE SHELL</span>
+          <small style="color:var(--muted); margin-left:auto; font-weight:600; font-size:12px">moral / administration — branding preserved</small>
+        </div>
+
+        <div class="terminal" aria-live="polite" aria-atomic="true">
+          <div class="boot-lines" id="bootLines" role="log"></div>
+          <div class="boot-progress" aria-hidden="true"><i id="bootBar"></i></div>
+          <div class="noise" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Dashboard -->
+      <div class="right" role="region" aria-label="dashboard">
+        <div class="top-row">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" id="avatar" aria-hidden="true">
+              <svg width="56" height="56" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs><radialGradient id="fg" cx="50%" cy="40%"><stop offset="0%" stop-color="#8ef"/><stop offset="100%" stop-color="#ff8a00"/></radialGradient></defs>
+                <path d="M100 140 C88 118,84 100,92 82 C100 64,120 56,120 40 C120 24,102 18,94 30 C86 42,74 58,78 74 C82 90,98 92,100 110 C102 128,100 140,100 140Z" fill="url(#fg)"/>
+              </svg>
+            </div>
+            <div class="name-wrap">
+              <div class="label-small">ACCESS LEVEL</div>
+              <div class="name" id="displayName">Ojas</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="threat"><div style="font-size:12px;color:var(--muted)">THREAT</div><div class="bar"><i id="threatBar"></i></div></div>
+            <div class="token" title="Demo token (hover to reveal)"><div style="font-size:12px;color:var(--muted)">TOKEN</div><div class="val blurred" id="secretToken">a9f4•••••d2</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="stat">
+            <div class="label">Ping (ms)</div>
+            <div class="value" id="pingVal">— ms</div>
+            <div class="meter" aria-hidden="true"><i id="pingBar"></i></div>
+            <canvas class="spark" id="pingSpark" width="400" height="40" aria-hidden="true" style="margin-top:10px"></canvas>
+          </div>
+
+          <div class="stat">
+            <div class="label">Packet Loss</div>
+            <div class="value" id="packetVal">— %</div>
+            <div class="meter" aria-hidden="true"><i id="packetBar"></i></div>
+            <div style="margin-top:10px"><small class="label-small" id="lastRtt">RTT: — ms</small></div>
+          </div>
+        </div>
+
+        <div class="panel" style="align-items:center;justify-content:space-between;">
+          <div style="flex:1">
+            <div class="label">Host</div>
+            <div class="value" id="hostName">ojas-server</div>
+            <div class="label-small" id="lastLogin">Last login IP: —</div>
+          </div>
+
+          <div style="width:160px;text-align:right">
+            <div class="label">Uptime</div>
+            <div class="value" id="uptime">—</div>
+            <div style="font-size:12px;color:var(--muted)" id="cpuTemp">CPU: —°C</div>
+          </div>
+        </div>
+
+        <div class="panel" style="flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div style="flex:1">
+              <div class="label">Services</div>
+              <div class="services" id="services"></div>
+            </div>
+
+            <div style="min-width:160px;text-align:right">
+              <div class="label">Security</div>
+              <div class="value" id="secState">HARDENED</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn" id="recheck" aria-label="Re-check server status" role="button">Re-check</button>
+            <button class="btn secondary" id="forceLogout" aria-label="Force logout all sessions" role="button">Force Logout</button>
+            <div style="flex:1"></div>
+            <div class="label-small" id="lastCheck">Last check: —</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="font-size:12px;color:var(--muted)">• dev@<span id="devName">ojas</span></div>
+          <div style="margin-left:auto;color:var(--muted);font-size:12px" id="demoNote">demo only</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- util ---------- */
+    const randInt = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    const clamp = (v,min,max)=>Math.max(min, Math.min(max, v));
+    const smooth = (cur,target,step=0.08)=> cur + (target - cur) * step;
+
+    /* ---------- elements ---------- */
+    const bootLinesEl = document.getElementById('bootLines');
+    const bootBarEl = document.getElementById('bootBar');
+    const pingVal = document.getElementById('pingVal');
+    const pingBar = document.getElementById('pingBar');
+    const packetVal = document.getElementById('packetVal');
+    const packetBar = document.getElementById('packetBar');
+    const pingSpark = document.getElementById('pingSpark');
+    const lastRtt = document.getElementById('lastRtt');
+    const hostNameEl = document.getElementById('hostName');
+    const lastLogin = document.getElementById('lastLogin');
+    const uptimeEl = document.getElementById('uptime');
+    const cpuTempEl = document.getElementById('cpuTemp');
+    const servicesEl = document.getElementById('services');
+    const secStateEl = document.getElementById('secState');
+    const lastCheck = document.getElementById('lastCheck');
+    const threatBar = document.getElementById('threatBar');
+    const secretToken = document.getElementById('secretToken');
+    const displayName = document.getElementById('displayName');
+    const devName = document.getElementById('devName');
+
+    /* ---------- state ---------- */
+    let username = (localStorage.getItem('user') || 'Ojas').toString();
+    displayName.textContent = username;
+    devName.textContent = username.toLowerCase();
+
+    const steps = [
+      "Initializing secure hardware modules...",
+      "Loading kernel extensions...",
+      "Checking integrity of credentials...",
+      `Validating user: ${username} ...`,
+      "Verifying root tokens...",
+      "Connecting to host ojas-server...",
+      "Handshake complete · secure channel established",
+      "Scanning services · auth, db, cache, web",
+      "Performing last-stage checks..."
+    ];
+
+    // boot log buffer
+    const MAX_LINES = 140;
+    const lines = [];
+
+    function appendLine(txt){
+      lines.push(txt);
+      if(lines.length > MAX_LINES) lines.shift();
+      bootLinesEl.textContent = lines.join('\n');
+      bootLinesEl.scrollTop = bootLinesEl.scrollHeight;
+    }
+
+    async function typeLine(line, delay=12){
+      return new Promise(res=>{
+        let i=0;
+        lines.push('');
+        if(lines.length>MAX_LINES) lines.shift();
+        const step = ()=> {
+          if(i < line.length){
+            const chunk = line.slice(i, i+3);
+            lines[lines.length-1] += chunk;
+            bootLinesEl.textContent = lines.join('\n');
+            bootLinesEl.scrollTop = bootLinesEl.scrollHeight;
+            i += 3;
+            setTimeout(step, delay + Math.random()*20);
+          } else res();
+        };
+        step();
+      });
+    }
+
+    async function runBoot(){
+      for(let i=0;i<steps.length;i++){
+        const target = clamp((i+1)/steps.length*92 + randInt(-3,6), 2, 98);
+        const prog = setInterval(()=> {
+          let cur = parseFloat(bootBarEl.style.width) || 0;
+          cur = smooth(cur, target, 0.06);
+          bootBarEl.style.width = Math.round(cur) + "%";
+          if(Math.abs(cur-target) < 0.6) clearInterval(prog);
+        }, 110);
+        await typeLine(steps[i]);
+        await new Promise(r=>setTimeout(r, 120 + Math.random()*220));
+      }
+      bootBarEl.style.width = "98%";
+      appendLine("\nACCESS GRANTED · ROOT ACCESS UNLOCKED ✅\n");
+      setTimeout(startDemo, 600);
+    }
+
+    /* ---------- demo stats ---------- */
+    let ping = randInt(12,86);
+    let packet = randInt(0,4);
+    let cpu = randInt(8,44);
+    let mem = randInt(24,66);
+    let disk = randInt(8,48);
+    let sessions = randInt(6,44);
+    let dbconns = randInt(2,12);
+    let start = Date.now() - randInt(1000*60*60*3, 1000*60*60*80);
+    let cputemp = randInt(36,62);
+
+    // sparkline
+    const N = 48;
+    const hist = new Array(N).fill(ping);
+    const ctx = pingSpark.getContext('2d');
+
+    function drawSpark(){
+      const w = pingSpark.width = Math.max(1, pingSpark.clientWidth * devicePixelRatio);
+      const h = pingSpark.height = Math.max(1, pingSpark.clientHeight * devicePixelRatio);
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = 'rgba(255,255,255,0.01)'; ctx.fillRect(0,0,w,h);
+
+      const max = Math.max(...hist);
+      const min = Math.min(...hist);
+      const range = Math.max(1, max-min);
+      ctx.beginPath();
+      hist.forEach((v,i)=>{
+        const x = (i/(hist.length-1))*(w-6)+3;
+        const y = h - ((v-min)/range)*(h-6) - 3;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = 'rgba(0,179,255,0.95)'; ctx.lineWidth = 2*devicePixelRatio; ctx.stroke();
+
+      const g = ctx.createLinearGradient(0,0,0,h); g.addColorStop(0,'rgba(0,179,255,0.06)'); g.addColorStop(1,'rgba(111,0,255,0.02)');
+      ctx.lineTo(w-3,h-3); ctx.lineTo(3,h-3); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    }
+
+    function formatUptime(ms){
+      const s = Math.floor(ms/1000);
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      if(d>0) return `${d}d ${h}h ${m}m`;
+      if(h>0) return `${h}h ${m}m`;
+      return `${m}m`;
+    }
+
+    const services = [
+      {name:'auth', ok:true},
+      {name:'db', ok:true},
+      {name:'cache', ok:true},
+      {name:'web', ok:true},
+      {name:'queue', ok: Math.random()>0.12},
+      {name:'metrics', ok:true}
+    ];
+
+    function renderServices(){
+      servicesEl.innerHTML = '';
+      services.forEach(s=>{
+        const el = document.createElement('div'); el.className='svc';
+        const light = document.createElement('span'); light.style.width='9px'; light.style.height='9px'; light.style.borderRadius='50%';
+        light.style.background = s.ok ? 'rgba(159,247,209,0.95)' : 'rgba(255,120,120,0.95)';
+        light.style.display='inline-block'; light.style.marginRight='6px';
+        el.appendChild(light);
+        const t = document.createElement('strong'); t.textContent = s.name; t.style.fontWeight=700; el.appendChild(t);
+        servicesEl.appendChild(el);
+      });
+    }
+
+    function updateTick(){
+      ping = clamp(Math.round(smooth(ping, ping + randInt(-8,10), 0.14)), 6, 400);
+      packet = clamp(Math.round(smooth(packet, packet + (Math.random()<0.06?randInt(-3,4):randInt(-1,1)), 0.12)), 0, 60);
+      cpu = clamp(Math.round(smooth(cpu, cpu + randInt(-6,8), 0.12)), 2, 98);
+      mem = clamp(Math.round(smooth(mem, mem + randInt(-4,6), 0.10)), 6, 98);
+      disk = clamp(Math.round(smooth(disk, disk + randInt(-2,3), 0.08)), 2, 98);
+      sessions = clamp(Math.round(smooth(sessions, sessions + randInt(-2,3), 0.06)), 1, 999);
+      dbconns = clamp(Math.round(smooth(dbconns, dbconns + randInt(-1,2), 0.07)), 0, 120);
+      cputemp = clamp(Math.round(smooth(cputemp, cputemp + randInt(-1,2), 0.05)), 30, 95);
+
+      hist.shift(); hist.push(ping + Math.round(Math.sin(Date.now()/1400)*2));
+      drawSpark();
+
+      pingVal.textContent = `${ping} ms`;
+      pingBar.style.width = clamp(Math.round((ping / 400)*100), 3, 100) + "%";
+      packetVal.textContent = `${packet} %`; packetBar.style.width = clamp(Math.round(packet), 2, 100) + "%";
+      lastRtt.textContent = `RTT: ${Math.max(1, Math.round(ping*0.9))} ms`;
+
+      hostNameEl.textContent = 'ojas-server';
+      lastLogin.textContent = `Last login IP: 192.168.${randInt(0,24)}.${randInt(2,244)}`;
+      uptimeEl.textContent = formatUptime(Date.now() - start);
+      cpuTempEl.textContent = `CPU: ${cputemp}°C`;
+
+      lastCheck.textContent = `Last check: ${new Date().toLocaleTimeString()}`;
+
+      const threat = clamp(Math.round((cpu/100)*100 + packet*1.2), 2, 100);
+      threatBar.style.width = `${clamp(Math.round(threat/1.1), 3, 100)}%`;
+
+      if(cpu > 85 || packet > 12) { secStateEl.textContent = "NOTICE: High Load"; secStateEl.style.color = "var(--danger)"; }
+      else { secStateEl.textContent = "HARDENED"; secStateEl.style.color = "#bfffe0"; }
+
+      if(Math.random() < 0.04){
+        const idx = randInt(0, services.length-1);
+        services[idx].ok = Math.random() > 0.12;
+        renderServices();
+        appendLine(`> service ${services[idx].name} status -> ${services[idx].ok ? 'OK' : 'DEGRADED'}`);
+      }
+    }
+
+    /* ---------- boot & loop ---------- */
+    async function bootSequence(){
+      for(let i=0;i<steps.length;i++){
+        const target = clamp((i+1)/steps.length*92 + randInt(-3,6), 2, 98);
+        const prog = setInterval(()=> {
+          let cur = parseFloat(bootBarEl.style.width) || 0;
+          cur = smooth(cur, target, 0.06);
+          bootBarEl.style.width = Math.round(cur) + '%';
+          if(Math.abs(cur-target) < 0.6) clearInterval(prog);
+        }, 110);
+        await typeLine(steps[i]);
+        await new Promise(r=>setTimeout(r, 120 + Math.random()*200));
+      }
+      bootBarEl.style.width = '98%';
+      appendLine('\nACCESS GRANTED · ROOT ACCESS UNLOCKED ✅\n');
+      setTimeout(startDemo, 600);
+    }
+
+    function appendLine(txt){ lines.push(txt); if(lines.length>MAX_LINES) lines.shift(); bootLinesEl.textContent = lines.join('\n'); bootLinesEl.scrollTop = bootLinesEl.scrollHeight; }
+
+    // RAF loop
+    let lastStats = 0;
+    function mainLoop(){
+      // aurora subtle shift via CSS animation already
+      const avatar = document.getElementById('avatar');
+      avatar.style.transform = `translateY(${Math.sin(Date.now()/1200)*2}px) rotate(${Math.sin(Date.now()/2200)*0.6}deg)`;
+
+      if(performance.now() - lastStats > 1200){ updateTick(); lastStats = performance.now(); }
+      window.requestAnimationFrame(mainLoop);
+    }
+    // manual controls
+    let reLock = false;
+    document.getElementById('recheck').addEventListener('click', ()=> {
+      if(reLock) return;
+      reLock = true;
+      appendLine(`\n> Manual re-check requested by ${username} ...`);
+      ping += randInt(-6,8); cpu = clamp(cpu + randInt(2,8),1,98);
+      updateTick();
+      setTimeout(()=> reLock=false, 1100);
+    });
+
+    document.getElementById('forceLogout').addEventListener('click', ()=> {
+      if(!confirm('Force logout will simulate closing sessions and redirect to index.html. Continue?')) return;
+      appendLine(`\n> FORCE LOGOUT initiated ... terminating sessions...`);
+      setTimeout(()=> { appendLine('> All sessions closed. Redirecting...'); setTimeout(()=> location.href='index.html', 700); }, 700);
+    });
+
+    // reveal demo token
+    secretToken.addEventListener('mouseenter', ()=> secretToken.classList.add('show'));
+    secretToken.addEventListener('mouseleave', ()=> secretToken.classList.remove('show'));
+
+    function startDemo(){
+      renderServices();
+      appendLine(`\n> Welcome ${username.toUpperCase()} — ROOT MODE ACTIVE\n`);
+      // signature
+      const sig = `• dev@${username.toLowerCase()} · aurora-agency · demo ${new Date().toLocaleDateString()}`;
+      const dn = document.getElementById('devName'); dn.textContent = username.toLowerCase();
+      const el = document.createElement('div'); el.style.color='var(--muted)'; el.style.fontSize='12px'; el.style.marginTop='6px';
+      let i=0; const t = setInterval(()=>{ el.textContent += sig.charAt(i); i++; if(i>=sig.length) clearInterval(t); }, 26);
+      document.getElementById('demoNote').insertAdjacentElement('afterend', el);
+
+      drawSpark(); window.requestAnimationFrame(mainLoop);
+    }
+
+    // kickstart
+    (async ()=>{ await bootSequence(); })();
+
+    // small safety
+    bootLinesEl.addEventListener('mousedown', e => e.preventDefault());
+    window.addEventListener('resize', ()=> drawSpark());
+  </script>
+</body>
+</html>

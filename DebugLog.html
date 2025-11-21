@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Debug Log</title>
+<style>
+  body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: "Roboto Mono", monospace;
+    padding: 20px;
+  }
+  .time { color: #8b949e; }
+  .ok { color: #7ee787; }
+  .warn { color: #f2cc60; }
+  .err { color: #ff7b72; }
+  .muted { color: #6e7681; }
+  .line { margin-bottom: 4px; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h3 style="color:#58a6ff; margin-bottom:10px;">[Nova Logs] Intrg Debug — Session: Oct 30 → Oct 31</h3>
+<pre>
+<span class="line"><span class="time">[02:23:11 AM]</span> Initiating AI Integration → /core/fetch/dpi</span>
+<span class="line"><span class="time">[02:23:14 AM]</span> ↳ Connected to endpoint (latency ≈ 248 ms)</span>
+<span class="line"><span class="time">[02:23:16 AM]</span> ↳ Response 200 <span class="ok">OK</span> — tokens = 142, dpi_score = 0.612</span>
+<span class="line"><span class="time">[02:23:21 AM]</span> Commit → session_3241 stored successfully</span>
+
+<span class="line"><span class="time">[02:34:08 AM]</span> Running background validation job #92</span>
+<span class="line"><span class="time">[02:34:10 AM]</span> ↳ Fetching user metrics via /api/ping</span>
+<span class="line"><span class="time">[02:34:12 AM]</span> ↳ Response <span class="warn">429 Rate Limit</span> — retrying in 4 sec…</span>
+<span class="line"><span class="time">[02:34:18 AM]</span> ↳ Retry success, status 200 <span class="ok">OK</span></span>
+
+<span class="line"><span class="time">[03:45:02 AM]</span> Worker node #2 started for batch sync</span>
+<span class="line"><span class="time">[03:45:04 AM]</span> ↳ AI module warm-up complete in 612 ms</span>
+<span class="line"><span class="time">[03:45:10 AM]</span> ↳ Merged dataset hash: e3b9fa9b</span>
+<span class="line"><span class="time">[03:45:18 AM]</span> ↳ Push complete — records synced: 187 (0 errors)</span>
+
+<span class="line"><span class="time">[04:20:33 AM]</span> System Healthcheck → /api/status/ping</span>
+<span class="line"><span class="time">[04:20:34 AM]</span> ↳ Ping reply latency = 932 ms <span class="warn">[High RTT]</span></span>
+<span class="line"><span class="time">[04:20:37 AM]</span> ↳ Auto-adjust DPI throttle parameter</span>
+<span class="line"><span class="time">[04:20:41 AM]</span> ↳ Stabilized — AI Integration rebalanced ✅</span>
+
+<span class="line"><span class="time">[05:57:09 AM]</span> Final Commit Triggered → /night-session</span>
+<span class="line"><span class="time">[05:57:11 AM]</span> ↳ Checksum verified (sha256 ok)</span>
+<span class="line"><span class="time">[05:57:13 AM]</span> ↳ AI response size: 3.4 KB | rtt: 712 ms</span>
+<span class="line"><span class="time">[05:57:17 AM]</span> ↳ Upload complete → cloud-node-east-01</span>
+<span class="line"><span class="time">[05:57:21 AM]</span> <span class="muted">Session ended — developer logout detected (05:57:21 AM)</span>
+</pre>
+</body>
+</html>

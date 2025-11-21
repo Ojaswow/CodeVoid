@@ -301,15 +301,21 @@
             const userIncrease = Math.floor(Math.random() * 5000) + 10000; // 10k to 15k
             currentUsers += userIncrease;
 
-            // Update Valuation (6k-9k normally, 40k every 5 updates, max 600k)
+            // Update Valuation (smaller increments to stay under 100k)
             let valuationIncrease;
-            if (updateCounter % 5 === 0) {
-                valuationIncrease = 40000; // Big change every 5 updates
+            if (currentValuation < 100000) {
+                if (updateCounter % 5 === 0) {
+                    // Big change every 5 updates, but check if it would exceed 100k
+                    valuationIncrease = Math.min(8000, 100000 - currentValuation);
+                } else {
+                    // Regular increase: 500 to 2000
+                    const regularIncrease = Math.floor(Math.random() * 1500) + 500;
+                    valuationIncrease = Math.min(regularIncrease, 100000 - currentValuation);
+                }
+                currentValuation = Math.min(100000, currentValuation + valuationIncrease);
             } else {
-                valuationIncrease = Math.floor(Math.random() * 3000) + 6000; // 6k to 9k
+                valuationIncrease = 0; // Stop increasing once 100k is reached
             }
-            
-            currentValuation = Math.min(600000, currentValuation + valuationIncrease);
 
             // Update API Requests (no limit, increases faster from 2M to 100M+)
             const apiIncrease = (Math.random() * 2.5) + 1.5; // 1.5M to 4M increase per update
@@ -328,7 +334,7 @@
 
             // Update change percentages
             const usersChangePercent = calculateChange(currentUsers, prevUsers);
-            const valuationChangePercent = calculateChange(currentValuation, prevValuation);
+            const valuationChangePercent = valuationIncrease > 0 ? calculateChange(currentValuation, prevValuation) : 0;
             const apiChangePercent = calculateChange(currentApiRequests, prevApiRequests);
             const responseChangePercent = calculateChange(currentResponseTime, prevResponseTime);
 
@@ -338,8 +344,13 @@
             usersChangeEl.className = usersChangePercent >= 0 ? 'stat-change' : 'stat-change negative';
 
             const valuationChangeEl = document.getElementById('valuationChange');
-            valuationChangeEl.textContent = `↑ ${valuationChangePercent}% from last update`;
-            valuationChangeEl.className = 'stat-change';
+            if (valuationIncrease > 0) {
+                valuationChangeEl.textContent = `↑ ${valuationChangePercent}% from last update`;
+                valuationChangeEl.className = 'stat-change';
+            } else {
+                valuationChangeEl.textContent = 'Max limit reached';
+                valuationChangeEl.className = 'stat-change';
+            }
 
             const apiChangeEl = document.getElementById('apiChange');
             apiChangeEl.textContent = `${apiChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(apiChangePercent)}% from last update`;
@@ -350,7 +361,7 @@
             responseChangeEl.className = responseChangePercent >= 0 ? 'stat-change negative' : 'stat-change';
         }
 
-        // Update stats every 30 seconds
+        // Update stats every 5 seconds
         setInterval(updateStats, 5000);
     </script>
 </body>
